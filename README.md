@@ -1,7 +1,7 @@
 # Chatutils mod
 
 ### What it does
-this mod adds compact chat without the incompatibilities of PolyPatcher & Patcher
+this mod adds compact chat (chat message stacking) without the incompatibilities of PolyPatcher & Patcher.
 
 
 ### Hotkeys:
@@ -12,9 +12,9 @@ this mod adds compact chat without the incompatibilities of PolyPatcher & Patche
  - /chatutils - Opens Configuration Gui
 
 ### Incompatible Mods
-labymod, Patcher & polypatcher, hychat 
+Labymod, Patcher & PolyPtcher, Hychat 
 
-if your game crashes or the mod fails to work remove these from modlist
+if your game crashes or the mod fails to work, remove these from modlist.
  
  
 ### Credits:
