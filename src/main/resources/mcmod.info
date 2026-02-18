@@ -1,0 +1,16 @@
+[
+{
+  "modid": "chatutils",
+  "name": "ChatUtils",
+  "description": "Adds a clickable symbol to each chat message that puts the message's content into your chat input box & stacking messages.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["h"],
+  "credits": "",
+  "logoFile": "logo.png",
+  "screenshots": [],
+  "dependencies": []
+}
+]
