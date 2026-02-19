@@ -9,8 +9,9 @@
   "updateUrl": "",
   "authorList": ["bigh"],
   "credits": "",
-  "logoFile": "logo.png",
-  "screenshots": [],
+  "logoFile": "src/main/resources/assets/chatutils/logo.png",
+  "screenshots":
+  [],
   "dependencies": []
 }
 ]

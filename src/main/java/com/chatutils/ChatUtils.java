@@ -22,7 +22,7 @@ public class ChatUtils {
 
     public static final String MODID = "chatutils";
     public static final String NAME = "ChatUtils";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.2.0";
 
     @Mod.Instance(MODID)
     public static ChatUtils instance;
@@ -30,6 +30,7 @@ public class ChatUtils {
     public static KeyBinding openGuiKey;
 
     private int ticks = 0;
+    private static boolean pendingGuiOpen = false;
 
     public static class Config {
         public static boolean compactingEnabled = true;
@@ -60,9 +61,16 @@ public class ChatUtils {
 
     @SubscribeEvent
     public void tick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.START && ++ticks >= 12000) {
-            ChatCompactHandler.cleanupExpired();
-            ticks = 0;
+        if (event.phase == TickEvent.Phase.START) {
+            if (pendingGuiOpen) {
+                Minecraft.getMinecraft().displayGuiScreen(new ChatUtilsConfigGui(null));
+                pendingGuiOpen = false;
+            }
+
+            if (++ticks >= 12000) {
+                ChatCompactHandler.cleanupExpired();
+                ticks = 0;
+            }
         }
     }
 
@@ -86,13 +94,17 @@ public class ChatUtils {
 
         @Override
         public void processCommand(ICommandSender sender, String[] args) {
-            Minecraft mc = Minecraft.getMinecraft();
-            mc.displayGuiScreen(new ChatUtilsConfigGui(null));
+            pendingGuiOpen = true;
         }
 
         @Override
         public int getRequiredPermissionLevel() {
             return 0;
+        }
+
+        @Override
+        public boolean canCommandSenderUseCommand(ICommandSender sender) {
+            return true;
         }
     }
 }

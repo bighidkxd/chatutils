@@ -40,7 +40,7 @@ public class ChatCompactHandler {
             return;
         }
 
-        if (ChatUtils.Config.expireTimeSeconds > 0 &&
+        if (ChatUtils.Config.expireTimeSeconds > -1 &&
                 (now - entry.lastSeenMessageMillis) > ChatUtils.Config.expireTimeSeconds * 1000L) {
             chatMessageMap.put(hash, new ChatEntry(1, now));
             return;
