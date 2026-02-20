@@ -1,11 +1,13 @@
 package com.chatutils;
 
 import net.minecraft.client.gui.ChatLine;
+import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.StringUtils;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -55,11 +57,35 @@ public class ChatCompactHandler {
         entry.messageCount++;
         entry.lastSeenMessageMillis = now;
 
+        String cleanUnformatted = StringUtils.stripControlCodes(component.getUnformattedText())
+                .replaceAll(TIMESTAMP_REGEX, "")
+                .trim();
+
         component.appendSibling(
                 new ChatComponentText(
                         EnumChatFormatting.GRAY + " (" + decimalFormat.format(entry.messageCount) + ")"
                 )
         );
+
+        if (ChatUtils.Config.stackedMessageCopyEnabled && !cleanUnformatted.isEmpty()) {
+            component.appendSibling(new ChatComponentText(EnumChatFormatting.RESET + " "));
+            component.appendSibling(createCopyIcon(cleanUnformatted + " (" + entry.messageCount + ")"));
+        }
+    }
+
+    private static IChatComponent createCopyIcon(String text) {
+        String runCommand = "/copytoclipboard " + text;
+
+        ChatComponentText copyIcon = new ChatComponentText(
+                EnumChatFormatting.DARK_GRAY + Character.toString((char) Integer.parseInt("270D", 16))
+        );
+
+        ChatStyle style = new ChatStyle()
+                .setChatHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ChatComponentText(EnumChatFormatting.GRAY + "Copy message")))
+                .setChatClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, runCommand));
+
+        copyIcon.setChatStyle(style);
+        return copyIcon;
     }
 
     public static void trackChatLine(ChatLine line) {

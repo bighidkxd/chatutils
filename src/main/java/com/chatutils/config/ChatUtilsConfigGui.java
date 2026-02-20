@@ -1,4 +1,4 @@
-package com.chatutils.config;
+package com.chatutils;
 
 import com.chatutils.ChatUtils;
 import net.minecraft.client.gui.GuiButton;
@@ -71,11 +71,20 @@ public class ChatUtilsConfigGui extends GuiScreen {
                 "Reset On World Change: " + (ChatUtils.Config.resetOnWorldChange ? "ON" : "OFF")
         ));
 
+        this.buttonList.add(new GuiButton(
+                4,
+                centerX - 100,
+                y + 96,
+                200,
+                20,
+                "Stacked Message Copy: " + (ChatUtils.Config.stackedMessageCopyEnabled ? "ON" : "OFF")
+        ));
+
         // Done
         this.buttonList.add(new GuiButton(
                 99,
                 centerX - 100,
-                y + 124,
+                y + 148,
                 200,
                 20,
                 "Done"
@@ -87,7 +96,7 @@ public class ChatUtilsConfigGui extends GuiScreen {
     private void setCompactingDependentButtonsEnabled(boolean enabled) {
         for (Object obj : this.buttonList) {
             GuiButton button = (GuiButton) obj;
-            if (button.id == 1 || button.id == 2 || button.id == 3) {
+            if (button.id == 1 || button.id == 2 || button.id == 3 || button.id == 4) {
                 button.enabled = enabled;
             }
         }
@@ -129,11 +138,17 @@ public class ChatUtilsConfigGui extends GuiScreen {
                         !ChatUtils.Config.resetOnWorldChange;
                 break;
 
+            case 4:
+                ChatUtils.Config.stackedMessageCopyEnabled =
+                        !ChatUtils.Config.stackedMessageCopyEnabled;
+                break;
+
             case 99:
                 mc.displayGuiScreen(parent);
                 return;
         }
 
+        ChatUtils.saveConfig();
         refreshButtons();
     }
 
