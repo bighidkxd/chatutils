@@ -25,3 +25,7 @@ Labymod, Patcher & PolyPtcher, Hychat
 if your game crashes or the mod fails to work, remove these from modlist.
 
 
+### Download 
+[click here to open modrinth page](https://modrinth.com/mod/chatutilsmod)
+
+
