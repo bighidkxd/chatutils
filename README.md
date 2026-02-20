@@ -13,7 +13,8 @@ this mod adds compact chat (chat message stacking) without the incompatibilities
 
  - B - Opens Configuration Gui
 
-<img width="507" height="423" alt="Screenshot 2026-02-19 180353" src="https://github.com/user-attachments/assets/ad3eeb03-6704-44f6-b813-c64322140c34" />
+
+<img width="484" height="509" alt="Screenshot 2026-02-21 012134" src="https://github.com/user-attachments/assets/03ad31c3-08c3-43ca-9be4-2350872ba3e5" />
 
  
 ### Commands:
