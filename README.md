@@ -1,8 +1,9 @@
 # ChatUtils
 
 ### What it does
-this mod adds compact chat (chat message stacking) without the incompatibilities of PolyPatcher & Patcher.
-<img width="443" height="81" alt="2026-02-19_16 44 34" src="https://github.com/user-attachments/assets/84ae697b-57a7-439b-87fd-3cfe4a2dfcef" />
+This mod adds a few chat utilities shown below
+
+<img width="497" height="200" alt="chatutilsexample" src="https://github.com/user-attachments/assets/a52d47fe-dcf0-4339-b0a2-1e2c9308074f" />
 
 
 ### Hotkeys:
@@ -13,8 +14,8 @@ this mod adds compact chat (chat message stacking) without the incompatibilities
 
  - B - Opens Configuration Gui
 
+<img width="702" height="436" alt="guichatutils" src="https://github.com/user-attachments/assets/2051fd03-bf60-4365-be30-411176ea5ecd" />
 
-<img width="484" height="509" alt="Screenshot 2026-02-21 012134" src="https://github.com/user-attachments/assets/03ad31c3-08c3-43ca-9be4-2350872ba3e5" />
 
  
 ### Commands:
