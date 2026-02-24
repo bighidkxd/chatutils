@@ -1,0 +1,7 @@
+{
+  "package": "com.chatutils.mixin",
+  "plugin": "com.chatutils.init.AutoDiscoveryMixinPlugin",
+  "refmap": "mixins.chatutils.refmap.json",
+  "minVersion": "0.7",
+  "compatibilityLevel": "JAVA_8"
+}
