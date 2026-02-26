@@ -12,10 +12,7 @@ import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.IChatComponent;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
@@ -23,6 +20,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import java.util.List;
 
@@ -39,21 +38,12 @@ public class MixinGuiNewChat {
     @Final
     private Minecraft mc;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Shared state for chat-head rendering
-    // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Updated by {@link #chatutils$captureDrawLine} whenever the draw-loop
-     * assigns a new ChatLine local, so the drawStringWithShadow redirect can
-     * reference it without fragile local-capture indices.
-     */
+
     @Unique
     private ChatLine chatutils$renderLine = null;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Timestamp injection (unchanged)
-    // ─────────────────────────────────────────────────────────────────────────
+    //  Timestamp injection
 
     @ModifyVariable(
             method = "setChatLine",
@@ -64,21 +54,12 @@ public class MixinGuiNewChat {
         return ChatCompactHandler.applyTimestamp(component);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Compacting + currentFullMessage tracking
-    // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Fires at the top of setChatLine().
-     * <p>
-     * We store {@code component} in {@link ChatUtilsState#currentFullMessage}
-     * BEFORE any ChatLine objects are constructed so that MixinChatLine can
-     * detect continuation (word-wrapped) lines and skip re-detection on them.
-     */
+
     @Inject(method = "setChatLine", at = @At("HEAD"))
     private void beforeSetChatLine(IChatComponent component, int chatLineId,
                                    int updateCounter, boolean refresh, CallbackInfo ci) {
-        // Let MixinChatLine know which source message is being processed.
+        // Let MixinChatLine know which source message is being processed
         ChatUtilsState.currentFullMessage = component;
 
         ChatCompactHandler.handleChatMessage(component, refresh, chatLines, drawnChatLines);
@@ -88,11 +69,8 @@ public class MixinGuiNewChat {
     private void afterSetChatLine(IChatComponent component, int chatLineId,
                                   int updateCounter, boolean refresh, CallbackInfo ci) {
         ChatCompactHandler.resetMessageHash();
-        ChatUtilsState.currentFullMessage = null; // done splitting
+        ChatUtilsState.currentFullMessage = null;
 
-        // Guard against unbounded growth.
-        while (chatLines.size() > 10000) chatLines.remove(chatLines.size() - 1);
-        while (drawnChatLines.size() > 10000) drawnChatLines.remove(drawnChatLines.size() - 1);
     }
 
     @ModifyArgs(
@@ -110,15 +88,29 @@ public class MixinGuiNewChat {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Animation  (toggle-controlled)
-    // ─────────────────────────────────────────────────────────────────────────
+    @ModifyConstant(
+            method = "setChatLine",
+            constant = @Constant(intValue = 100),
+            expect = 2
+    )
+    private int chatutils$expandChatHistory(int original) {
+        return 16384;
+    }
+
+    /**
+     * Prevents chat from being cleared on world change
+     */
+    @Overwrite
+    public void clearChatMessages() {
+    }
+
+    //  Chat Animation
 
     @Unique
     private long animationStart = 0L;
 
     /**
-     * Reset the animation clock whenever a new message arrives.
+     * Reset the animation clock whenever a new message arrives
      */
     @Inject(method = "setChatLine", at = @At("HEAD"))
     private void chatutils$resetAnimation(IChatComponent component, int chatLineId,
@@ -129,8 +121,8 @@ public class MixinGuiNewChat {
     }
 
     /**
-     * Slide the new message in from below.
-     * Only active while {@link ChatUtils.Config#animatedChat} is true.
+     * Slide the new message in from below
+     * Only active while {@link ChatUtils.Config#animatedChat} is true
      */
     @Inject(method = "drawChat", at = @At("HEAD"))
     private void applyAnimation(int updateCounter, CallbackInfo ci) {
@@ -145,11 +137,9 @@ public class MixinGuiNewChat {
         GlStateManager.translate(0.0D, -shift, 0.0D);
     }
 
-    //  Transparent background
-
     /**
-     * Forces the chat background rect to fully transparent when the option is on.
-     * When off, the vanilla colour argument is passed through unchanged.
+     * Forces the chat background rect to fully transparent when the option is on
+     * When off the vanilla colour argument is passed through unchanged
      */
     @ModifyArgs(
             method = "drawChat",
@@ -161,41 +151,23 @@ public class MixinGuiNewChat {
         if (ChatUtils.Config.transparentChat) {
             args.set(4, 0x00000000);
         }
+        if (ChatUtils.Config.chatHeads) {
+            // args: (left, top, right, bottom, color)
+            // extend the right edge by 10px to cover the shifted text
+            args.set(2, (int) args.get(2) + 10);
+        }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Chat heads – step 1: capture the current ChatLine during drawChat loop
-    // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Every iteration of the drawChat loop assigns a ChatLine to a local.
-     * We intercept that store via @ModifyVariable so we always know which line
-     * is about to be rendered when our drawStringWithShadow redirect fires.
-     */
+
     @ModifyVariable(method = "drawChat", at = @At("STORE"))
     private ChatLine chatutils$captureDrawLine(ChatLine line) {
         chatutils$renderLine = line;
         return line;
     }
 
-    //  Chat heads – step 2: redirect the font-renderer call to draw the head
+    // redirect the fontrenderer call to draw the head
 
-    /**
-     * Replaces the vanilla {@code FontRenderer.drawStringWithShadow} call inside
-     * drawChat with our own implementation that:
-     *
-     * <ol>
-     *   <li>Draws an 8×8 player-skin face to the left of the message when the
-     *       line was attributed to a known player.</li>
-     *   <li>Shifts the text 10 px right to make room for the head (or just for
-     *       alignment when {@link ChatUtils.Config#offsetNonPlayerMessages} is
-     *       enabled).</li>
-     *   <li>Falls through to the vanilla draw call for the (shifted) text.</li>
-     * </ol>
-     * <p>
-     * The skin face is rendered at the same alpha as the chat line itself so it
-     * fades out naturally with the message.
-     */
     @Redirect(
             method = "drawChat",
             at = @At(value = "INVOKE",
@@ -210,8 +182,8 @@ public class MixinGuiNewChat {
             NetworkPlayerInfo info = hook.chatutils$getPlayerInfo();
 
             if (info != null) {
-                // ── draw the player skin face ───────────────────────────────
-                // Extract the chat-line alpha so the head fades in sync.
+                // draw the player skin face
+                // Extract the chat-line alpha so the head fades in sync
                 int alpha = (color >> 24) & 0xFF;
                 float headAlpha = (alpha == 0) ? 1.0f : alpha / 255f;
 
@@ -253,7 +225,7 @@ public class MixinGuiNewChat {
     }
 
     /**
-     * When chat heads are active, all text is shifted 10px right.
+     * When chat heads are active all text is shifted 10px right.
      * Click detection must be shifted to match, otherwise click targets
      * hover events are 10px to the left of where they appear.
      */
